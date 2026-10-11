@@ -1,91 +1,82 @@
-# Debian Web Server Lab
+# My Debian web server lab
 
-A documented Debian 13 web server built in VMware: Nginx serves a static page over HTTPS and proxies a Python health API. UFW limits inbound TCP access to SSH, HTTP and HTTPS. BIND9 provides a loopback-only authoritative lab zone; fail2ban protects SSH; cron schedules configuration and application backups.
+I started this project to practice Linux server administration and have something working to show in my portfolio. I installed Debian in VMware on my Windows PC, then set up a web server with a small Python backend.
 
-**Status:** deployed and tested on 11 October 2026. Six browser screenshots are included. This is a private lab, not a publicly hosted production server. Source code and documentation are prepared for public portfolio publication.
+The VM runs Debian 13. The VMware template said Debian 12, so checking `/etc/os-release` was one of the first things I had to sort out.
 
-## Architecture
+This repository contains the configs, setup scripts, test output and screenshots. The server itself runs in my local VM.
+
+## What I built
+
+- Nginx serves an HTML page and redirects HTTP to HTTPS.
+- `/api/health` goes through Nginx to a Python app on `127.0.0.1:8000`.
+- The app runs as its own user through systemd.
+- UFW allows incoming TCP traffic on 22, 80 and 443.
+- BIND9 serves a local `lab.test` zone, only inside the VM.
+- SSH uses a separate login key, with root login disabled.
+- fail2ban is configured for SSH.
+- A backup script saves the configs, app and page, with a checksum. Cron runs it daily at 02:15 in the VM's timezone.
 
 ```mermaid
 flowchart LR
-  Client[Windows host] -->|TCP 22: SSH keys| SSH[Debian administration]
-  Client -->|TCP 80: redirect| Nginx[Nginx]
-  Client -->|TCP 443: TLS| Nginx
-  Nginx --> Static[Static lab page]
-  Nginx -->|Loopback TCP 8000| App[Python health API]
-  Local[Local DNS client] -->|Loopback TCP/UDP 53| Bind[BIND9: lab.test]
-  Journal[SSH journal] --> Fail2ban[fail2ban]
-  Fail2ban --> Firewall[UFW]
-  Cron[Cron: daily 02:15 VM time] --> Backup[Root-only backup archive and checksum]
+    Windows[Windows PC] -->|SSH| Debian[Debian VM]
+    Windows -->|HTTP / HTTPS| Nginx
+    Nginx --> Page[HTML page]
+    Nginx -->|127.0.0.1:8000| Python[Python app]
+    Debian --> DNS[BIND9: local lab.test zone]
+    Cron --> Backup[Backup archive + checksum]
 ```
 
-## Verified results
+## Problems I ran into
 
-| Check | Observed result |
-|---|---|
-| Debian packages | No pending upgrades during provisioning |
-| SSH | Dedicated key login succeeded; normal user belongs to sudo group |
-| Services | SSH, Nginx, named, lab-app, fail2ban and cron active and enabled |
-| Config syntax | Nginx, sshd, BIND configuration and lab zone passed validation |
-| External connectivity | TCP 22, 80 and 443 reachable from Windows; TCP 53 and 8000 unreachable |
-| HTTP | 301 redirect to `https://web.lab.test/` |
-| HTTPS | TLS 1.3 from Windows, chain and hostname verified using the lab certificate |
-| Static content | Page title returned through HTTPS |
-| Reverse proxy | `/api/health` returned HTTP 200 and JSON status `ok` |
-| DNS | `web.lab.test` resolved to `127.0.0.1` over UDP and TCP from Debian |
-| fail2ban | SSH jail active; controlled manual ban/unban created and removed a UFW rule |
-| Backup | Archive checksum passed; extracted page, app and configs matched source files |
-| Cron execution | A bounded one-shot cron test created a backup and passed its checksum; temporary test schedule removed |
-| Logs | Backend requests recorded; Nginx error log was empty at verification |
+My user wasn't in the sudo group, and SSH wasn't active at first. After fixing those, I checked that I could connect from Windows.
 
-Full evidence: [server verification](docs/server-verification.txt), [Windows host verification](docs/host-verification.txt), and [six screenshots with captions](docs/SCREENSHOTS.md).
+Copy and paste into VMware didn't work reliably. Using SSH made it possible to continue the setup without typing every command into the VM window.
 
-The fail2ban action was tested with the documentation-only address `192.0.2.123`. Actual brute-force detection was not simulated. Cron execution passed a one-shot test; a regular overnight run has not yet been observed. The daily schedule is 02:15 in the VM's America/Chicago timezone. Restore testing compares selected files in a temporary directory, rather than restoring an entire VM.
+I originally planned to use `lab.local` for DNS. I used `lab.test` instead because `.local` is used by multicast DNS. Keeping DNS on loopback also let me keep the firewall limited to the three ports above.
 
-Security review restricted custom Nginx logs to mode 0640 and disabled unneeded SSH compression, forwarding and X11 access. Fresh key login and HTTPS health checks passed afterward. Password authentication remains enabled pending the owner's decision. This demonstration is not certified vulnerability-free, and available Debian updates do not imply the absence of known package issues.
+HTTPS needed a little extra work because the certificate is self-signed. The tests use the lab certificate and the hostname `web.lab.test` to check it properly.
 
-## Repository contents
+## Checks that passed
 
-- `configs/`: copies of deployed Nginx, DNS, SSH, fail2ban, systemd and cron configuration.
-- `app/app.py`: Python API, bound exclusively to loopback.
-- `site/index.html`: page served by the lab server.
-- `scripts/provision.sh`: lab provisioning script; review before running on another machine.
-- `scripts/verify.sh`: service and functional checks, including backup restore and a controlled fail2ban action.
-- `docs/`: test evidence, operations guide, troubleshooting and screenshot plan.
+The services were running and enabled, and the Nginx, SSH and BIND config checks passed. From Windows, ports 22, 80 and 443 were reachable; DNS and the Python port were not.
 
-## Design decisions
+The HTTPS page loaded, and `/api/health` returned HTTP 200 with `status: ok`. DNS queries worked over UDP and TCP inside Debian.
 
-DNS uses `lab.test`, a reserved testing namespace, rather than `.local`, which can conflict with multicast DNS. BIND listens on loopback only: a DNS service accessible from other machines would require additional firewall rules for TCP/UDP 53. The Python API is a small lab demonstration using the standard library, not a production application server. It runs under a dedicated account with systemd restrictions.
+The backup checksum passed. Extracting the archive into a temporary directory and comparing selected files also passed. A temporary cron job confirmed that cron could run the backup script.
 
-TLS uses a self-signed certificate with SANs for `web.lab.test` and `lab.test`. It must be explicitly trusted for local tests; no public certificate was issued. A real-domain deployment would require valid DNS, appropriate hosting and a public certificate such as Let's Encrypt.
+For fail2ban, the test was a manual ban and unban of `192.0.2.123`, a documentation address. I haven't tested detection with repeated failed logins yet.
 
-Backups contain private server keys and are retained only in root-protected VM storage. They are not committed to Git. A production design also needs encrypted off-machine backups and a retention policy.
+[Server checks](docs/server-verification.txt) · [Checks from Windows](docs/host-verification.txt) · [Screenshots](docs/SCREENSHOTS.md)
 
-## Problems solved
+## Files
 
-1. **VM label did not match the OS:** inspected `/etc/os-release`, confirming Debian 13 instead of relying on the Debian 12 VMware name.
-2. **Normal user lacked sudo:** added the user to the sudo group, then reloaded the login session.
-3. **SSH initially inactive:** enabled the SSH service and verified connectivity from Windows.
-4. **Clipboard sharing blocked setup:** used a separate SSH connection and installed a dedicated public key.
-5. **Host SSH client compatibility and key access:** used a dedicated Python SSH client, pinned the first-contact VM host key and verified subsequent key authentication. First-contact trust was TOFU, not independently verified.
-6. **Strict three-port firewall versus DNS:** kept authoritative lab DNS on loopback instead of exposing port 53.
-7. **Self-signed TLS testing:** used the lab certificate as an explicit trust anchor and the correct server hostname, without disabling certificate validation.
+| Folder | Contents |
+| --- | --- |
+| `configs/` | Copies of the server configuration |
+| `app/` | The Python health API |
+| `site/` | The HTML page |
+| `scripts/` | Setup, verification and backup scripts |
+| `docs/` | Command output, screenshots and my maintenance notes |
 
-## Remaining work before portfolio publication
+[Maintenance commands](docs/OPERATIONS.md)
 
-- Optionally replace the four browser evidence-viewer screenshots with native terminal captures when VMware capture works.
-- Confirm a scheduled cron run and test service persistence after a controlled reboot.
-- Confirm Windows hostname resolution/browser trust if direct browser access is wanted.
-- The account password was changed locally; password SSH remains enabled and root SSH is disabled.
-- Publish to a chosen GitHub account and host the portfolio on GitHub Pages or Cloudflare Pages.
+`scripts/provision.sh` is for a fresh, dedicated lab VM. It replaces some default configs, so I wouldn't run it on an existing server without reviewing it first.
 
-## References
+## What I still want to improve
+
+I still need to check the services after a reboot and observe a normal overnight backup. The backup script also needs a retention policy and a copy stored outside the VM.
+
+The Python app is a small learning example, and HTTPS uses a local certificate. A public deployment would need different hosting and a real domain certificate. I haven't hosted a separate portfolio website yet.
+
+There are six screenshots. Two show live server responses; four show saved command output in a browser viewer because capturing the VMware terminal wasn't working.
+
+Passwords, private keys and backup archives stay outside this repository. The account password has been changed, and the old SSH login key has been replaced. Password login over SSH is still enabled.
+
+## Docs I used
 
 - [Nginx beginner guide](https://nginx.org/en/docs/beginners_guide.html)
 - [Nginx HTTPS configuration](https://nginx.org/en/docs/http/configuring_https_servers.html)
-- [Debian fail2ban guidance](https://www.debian.org/doc/manuals/debian-handbook/sect.supervision.en.html)
-- [Reserved test names: RFC 2606](https://www.rfc-editor.org/rfc/rfc2606)
+- [Debian handbook: monitoring and fail2ban](https://www.debian.org/doc/manuals/debian-handbook/sect.supervision.en.html)
+- [Reserved testing domains](https://www.rfc-editor.org/rfc/rfc2606)
 
-No passwords, SSH private keys, TLS private keys, backup archives or real public IP addresses are included in this project folder.
-
-SSH access key rotation is verified in [the rotation record](docs/ssh-key-rotation.txt). Private access keys are kept outside this repository.
