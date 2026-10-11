@@ -1,0 +1,9 @@
+#!/bin/bash
+set -euo pipefail
+umask 077
+install -d -m 700 /var/backups/lab
+archive="/var/backups/lab/lab-$(date -u +%Y%m%dT%H%M%SZ).tar.gz"
+tar -czf "$archive" -C / etc/nginx etc/bind etc/fail2ban etc/ufw etc/ssh etc/systemd/system/lab-app.service etc/cron.d/lab-backup opt/lab-app var/www/lab usr/local/sbin/lab-backup
+sha256sum "$archive" > "$archive.sha256"
+logger -t lab-backup "Created $archive"
+echo "$archive"
