@@ -1,8 +1,6 @@
-# Screenshot evidence
+# Screenshots
 
-Six genuine browser screenshots captured on 11 October 2026. The first two show live VM responses through a Windows loopback viewer that verifies the upstream HTTPS certificate and hostname. The browser address belongs to the viewer, not the VM; it is not proof of browser-native certificate trust.
-
-The other four show recorded VM command output rendered in a documentation viewer. They are browser screenshots, not native terminal captures. Exact output is retained in server-verification.txt. VMware window capture timed out; native terminal captures remain an optional replacement.
+Captured on 11 October 2026. The first two show live responses from the VM through a local browser viewer. That viewer checks the HTTPS certificate and hostname. The other four show saved command output; they are not terminal screenshots. The full output is in server-verification.txt.
 
 ## 1. Live Nginx page
 

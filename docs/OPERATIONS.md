@@ -1,4 +1,6 @@
-# Operations guide
+# Commands I use to check the server
+
+These are my notes for checking services, reading logs and running a backup.
 
 ## Inspect services
 
