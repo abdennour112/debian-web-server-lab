@@ -1,8 +1,6 @@
 # My Debian web server lab
 
-I started this project to practice Linux server administration and have something working to show in my portfolio. I installed Debian in VMware on my Windows PC, then set up a web server with a small Python backend.
-
-The VM runs Debian 13. The VMware template said Debian 12, so checking `/etc/os-release` was one of the first things I had to sort out.
+I built this Debian 13 web server in VMware to demonstrate Linux service administration, reverse proxy configuration, access controls and backup verification. Nginx serves a static page over HTTPS and routes API requests to a Python backend.
 
 This repository contains the configs, setup scripts, test output and screenshots. The server itself runs in my local VM.
 
@@ -27,15 +25,11 @@ flowchart LR
     Cron --> Backup[Backup archive + checksum]
 ```
 
-## Problems I ran into
+## Configuration decisions
 
-My user wasn't in the sudo group, and SSH wasn't active at first. After fixing those, I checked that I could connect from Windows.
+I used `lab.test` for the DNS zone to avoid conflicts with multicast DNS on `.local`. DNS and the backend listen on loopback, so the firewall only needs to expose SSH, HTTP and HTTPS.
 
-Copy and paste into VMware didn't work reliably. Using SSH made it possible to continue the setup without typing every command into the VM window.
-
-I originally planned to use `lab.local` for DNS. I used `lab.test` instead because `.local` is used by multicast DNS. Keeping DNS on loopback also let me keep the firewall limited to the three ports above.
-
-HTTPS needed a little extra work because the certificate is self-signed. The tests use the lab certificate and the hostname `web.lab.test` to check it properly.
+HTTPS uses a self-signed lab certificate. The tests validate the certificate and the hostname `web.lab.test`, rather than bypassing certificate checks.
 
 ## Checks that passed
 
@@ -69,7 +63,7 @@ I still need to check the services after a reboot and observe a normal overnight
 
 The Python app is a small learning example, and HTTPS uses a local certificate. A public deployment would need different hosting and a real domain certificate. I haven't hosted a separate portfolio website yet.
 
-There are six screenshots. Two show live server responses; four show saved command output in a browser viewer because capturing the VMware terminal wasn't working.
+There are six screenshots. Two show live server responses; four show saved command output in a browser viewer. Full test output is included in `docs/`.
 
 Passwords, private keys and backup archives stay outside this repository. The account password has been changed, and the old SSH login key has been replaced. Password login over SSH is still enabled.
 

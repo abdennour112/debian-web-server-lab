@@ -1,8 +1,6 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Debian web server â€” project report</title><style>body{font:17px/1.6 system-ui;background:#102033;color:#edf3fa;margin:0}main{max-width:1100px;margin:auto;padding:40px}h1{font-size:42px;line-height:1.2}h2{color:#72ddc5}a{color:#72ddc5}.badge{display:inline-block;padding:5px 14px;background:#1c483f;border-radius:20px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:25px}.card{background:#193147;border:1px solid #33516c;border-radius:12px;padding:24px}.card img{display:block;max-width:100%;width:304px;height:auto;margin:auto}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#172d42;padding:25px;border-radius:12px;font-size:14px}summary{cursor:pointer;color:#72ddc5}p{color:#d2e2ed}</style><main><p class="badge">Deployed and tested Â· 11 October 2026</p><h1>Debian Web Server Lab</h1><p>My VMware lab: Nginx, local HTTPS, a Python reverse proxy, loopback DNS, firewall, fail2ban and backups.</p><p>This is a saved project report. Two screenshots show live responses at capture time; four show recorded results in a browser documentation viewer, not native terminal captures.</p><h2>Checks that passed</h2><ul><li>Six services active and enabled</li><li>Inbound TCP 22, 80 and 443 reachable; backend and DNS remain local</li><li>HTTPS certificate and hostname validation passed; API returned HTTP 200</li><li>DNS UDP/TCP checks and manual fail2ban ban/unban passed</li><li>Backup checksum and selected-file restore comparisons passed</li></ul><p>Still to check: a normal overnight backup and service startup after a reboot. A separate portfolio website is not hosted yet.</p><h2>Screenshot evidence</h2><div class="grid"><article class="card"><h3>Live Nginx page</h3><p>Live VM response through a viewer that verifies upstream HTTPS.</p><a href="docs/screenshots/01-live-web-page.jpg"><img src="docs/screenshots/01-live-web-page.jpg" alt="Live Nginx page"></a></article><article class="card"><h3>Live reverse proxy response</h3><p>Live JSON health response; certificate and hostname verified by the viewer.</p><a href="docs/screenshots/02-live-api-https.jpg"><img src="docs/screenshots/02-live-api-https.jpg" alt="Live reverse proxy response"></a></article><article class="card"><h3>Services and firewall</h3><p>Recorded command output displayed in a browser evidence viewer.</p><a href="docs/screenshots/03-firewall-services.jpg"><img src="docs/screenshots/03-firewall-services.jpg" alt="Services and firewall"></a></article><article class="card"><h3>Local DNS</h3><p>Recorded UDP/TCP query results; BIND9 listens only on loopback.</p><a href="docs/screenshots/04-dns.jpg"><img src="docs/screenshots/04-dns.jpg" alt="Local DNS"></a></article><article class="card"><h3>fail2ban controlled test</h3><p>Manual ban/unban action; automatic failed-login detection was not simulated.</p><a href="docs/screenshots/05-fail2ban.jpg"><img src="docs/screenshots/05-fail2ban.jpg" alt="fail2ban controlled test"></a></article><article class="card"><h3>Backup restore drill</h3><p>Checksum and selected-file comparisons passed; overnight cron execution remains unobserved.</p><a href="docs/screenshots/06-backup-restore.jpg"><img src="docs/screenshots/06-backup-restore.jpg" alt="Backup restore drill"></a></article></div><h2>Documentation and configuration</h2><p><a href="README.md">README</a> Â· <a href="docs/OPERATIONS.md">Operations guide</a> Â· <a href="docs/server-verification.txt">Server test output</a> Â· <a href="docs/host-verification.txt">Windows test output</a></p><details><summary>Read the complete README here</summary><pre># My Debian web server lab
 
-I started this project to practice Linux server administration and have something working to show in my portfolio. I installed Debian in VMware on my Windows PC, then set up a web server with a small Python backend.
-
-The VM runs Debian 13. The VMware template said Debian 12, so checking `/etc/os-release` was one of the first things I had to sort out.
+I built this Debian 13 web server in VMware to demonstrate Linux service administration, reverse proxy configuration, access controls and backup verification. Nginx serves a static page over HTTPS and routes API requests to a Python backend.
 
 This repository contains the configs, setup scripts, test output and screenshots. The server itself runs in my local VM.
 
@@ -27,15 +25,11 @@ flowchart LR
     Cron --&gt; Backup[Backup archive + checksum]
 ```
 
-## Problems I ran into
+## Configuration decisions
 
-My user wasn&#x27;t in the sudo group, and SSH wasn&#x27;t active at first. After fixing those, I checked that I could connect from Windows.
+I used `lab.test` for the DNS zone to avoid conflicts with multicast DNS on `.local`. DNS and the backend listen on loopback, so the firewall only needs to expose SSH, HTTP and HTTPS.
 
-Copy and paste into VMware didn&#x27;t work reliably. Using SSH made it possible to continue the setup without typing every command into the VM window.
-
-I originally planned to use `lab.local` for DNS. I used `lab.test` instead because `.local` is used by multicast DNS. Keeping DNS on loopback also let me keep the firewall limited to the three ports above.
-
-HTTPS needed a little extra work because the certificate is self-signed. The tests use the lab certificate and the hostname `web.lab.test` to check it properly.
+HTTPS uses a self-signed lab certificate. The tests validate the certificate and the hostname `web.lab.test`, rather than bypassing certificate checks.
 
 ## Checks that passed
 
@@ -69,7 +63,7 @@ I still need to check the services after a reboot and observe a normal overnight
 
 The Python app is a small learning example, and HTTPS uses a local certificate. A public deployment would need different hosting and a real domain certificate. I haven&#x27;t hosted a separate portfolio website yet.
 
-There are six screenshots. Two show live server responses; four show saved command output in a browser viewer because capturing the VMware terminal wasn&#x27;t working.
+There are six screenshots. Two show live server responses; four show saved command output in a browser viewer. Full test output is included in `docs/`.
 
 Passwords, private keys and backup archives stay outside this repository. The account password has been changed, and the old SSH login key has been replaced. Password login over SSH is still enabled.
 
