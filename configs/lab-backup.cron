@@ -1,0 +1,3 @@
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+15 2 * * * root /usr/local/sbin/lab-backup >> /var/log/lab-backup.log 2>&1
