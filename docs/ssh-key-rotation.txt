@@ -1,0 +1,6 @@
+SSH login key rotation
+New key login verified.
+Old key authentication rejected.
+Other authorized keys preserved.
+Private keys excluded from the project.
+Password authentication unchanged.

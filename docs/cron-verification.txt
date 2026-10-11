@@ -1,0 +1,7 @@
+VM timezone:
+America/Chicago
+2026-10-11T15:46:30+00:00
+One-shot cron proof installed; it removes its schedule before running.
+/var/backups/lab/lab-20261011T154701Z.tar.gz
+/var/backups/lab/lab-20261011T154701Z.tar.gz: OK
+PASS: backup executed by cron and temporary schedule removed.

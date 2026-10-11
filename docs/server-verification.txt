@@ -1,0 +1,100 @@
+=== UTC timestamp ===
+2026-10-11T<EXTERNAL-DNS-IP>+00:00
+=== OS and versions ===
+PRETTY_NAME="Debian GNU/Linux 13 (trixie)"
+NAME="Debian GNU/Linux"
+VERSION_ID="13"
+VERSION="13 (trixie)"
+VERSION_CODENAME=trixie
+DEBIAN_VERSION_FULL=13.7
+ID=debian
+HOME_URL="https://www.debian.org/"
+SUPPORT_URL="https://www.debian.org/support"
+BUG_REPORT_URL="https://bugs.debian.org/"
+BIND 9.20.29-1~deb13u1-Debian (Stable Release) <id:>
+Python 3.13.5
+=== Services ===
+ssh: active
+enabled: enabled
+nginx: active
+enabled: enabled
+named: active
+enabled: enabled
+lab-app: active
+enabled: enabled
+fail2ban: active
+enabled: enabled
+cron: active
+enabled: enabled
+=== Config validation ===
+zone lab.test/IN: loaded serial 2026101101
+OK
+=== Firewall ===
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere
+80/tcp                     ALLOW IN    Anywhere
+443/tcp                    ALLOW IN    Anywhere
+22/tcp (v6)                ALLOW IN    Anywhere (v6)
+80/tcp (v6)                ALLOW IN    Anywhere (v6)
+443/tcp (v6)               ALLOW IN    Anywhere (v6)
+
+=== Static page and trusted TLS ===
+Debian Web Server Lab
+{"status": "ok", "service": "lab-app", "via": "nginx reverse proxy"}
+=== DNS UDP and TCP ===
+127.0.0.1
+127.0.0.1
+=== fail2ban controlled action test ===
+1
+192.0.2.123
+Anywhere                   REJECT      192.0.2.123                # by Fail2Ban after 0 attempts against sshd
+1
+Status for the jail: sshd
+|- Filter
+|  |- Currently failed:	0
+|  |- Total failed:	0
+|  `- Journal matches:	_SYSTEMD_UNIT=ssh.service + _COMM=sshd
+`- Actions
+   |- Currently banned:	0
+   |- Total banned:	1
+   `- Banned IP list:
+Manual ban/unban action verified; failed-login detection not simulated.
+=== Backup and restore ===
+/var/backups/lab/lab-20261011T151522Z.tar.gz: OK
+Restore content matches: var/www/lab/index.html
+Restore content matches: opt/lab-app/app.py
+Restore content matches: etc/nginx/sites-available/lab
+Restore content matches: etc/bind/db.lab.test
+=== Scheduled backup ===
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+15 2 * * * root /usr/local/sbin/lab-backup >> /var/log/lab-backup.log 2>&1
+=== Recent service log summary ===
+Oct 11 <EXTERNAL-DNS-IP> debianSYs named[6243]: network unreachable resolving './NS/IN': <EXTERNAL-DNS-IP>#53
+Oct 11 <EXTERNAL-DNS-IP> debianSYs named[6243]: network unreachable resolving './DNSKEY/IN': <EXTERNAL-DNS-IP>#53
+Oct 11 <EXTERNAL-DNS-IP> debianSYs named[6243]: network unreachable resolving './NS/IN': <EXTERNAL-DNS-IP>#53
+Oct 11 <EXTERNAL-DNS-IP> debianSYs named[6243]: network unreachable resolving './DNSKEY/IN': <EXTERNAL-DNS-IP>#53
+Oct 11 <EXTERNAL-DNS-IP> debianSYs named[6243]: network unreachable resolving './NS/IN': <EXTERNAL-DNS-IP>#53
+Oct 11 <EXTERNAL-DNS-IP> debianSYs named[6243]: network unreachable resolving './DNSKEY/IN': <EXTERNAL-DNS-IP>#53
+Oct 11 <EXTERNAL-DNS-IP> debianSYs named[6243]: network unreachable resolving './NS/IN': <EXTERNAL-DNS-IP>#53
+Oct 11 <EXTERNAL-DNS-IP> debianSYs named[6243]: managed-keys-zone: Key 20326 for zone . is now trusted (acceptance timer complete)
+Oct 11 <EXTERNAL-DNS-IP> debianSYs named[6243]: managed-keys-zone: Key 38696 for zone . is now trusted (acceptance timer complete)
+Oct 11 <EXTERNAL-DNS-IP> debianSYs python3[6229]: 127.0.0.1 - - [11/Oct/2026 <EXTERNAL-DNS-IP>] "GET /health HTTP/1.0" 200 -
+Oct 11 <EXTERNAL-DNS-IP> debianSYs python3[6229]: 127.0.0.1 - - [11/Oct/2026 <EXTERNAL-DNS-IP>] "GET /health HTTP/1.0" 200 -
+Oct 11 <EXTERNAL-DNS-IP> debianSYs python3[6229]: 127.0.0.1 - - [11/Oct/2026 <EXTERNAL-DNS-IP>] "GET /health HTTP/1.0" 200 -
+=== Nginx error log size ===
+0 /var/log/nginx/lab.error.log
+=== SSH effective settings ===
+permitrootlogin no
+pubkeyauthentication yes
+passwordauthentication yes
+PASS: all verification commands completed
+nginx version: nginx/1.26.3
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful

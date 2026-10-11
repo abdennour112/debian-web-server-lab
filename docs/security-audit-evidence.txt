@@ -1,0 +1,124 @@
+=== Audit timestamp ===
+2026-10-11T15:48:09+00:00
+=== Package update check ===
+Hit:1 http://deb.debian.org/debian trixie InRelease
+Hit:2 http://security.debian.org/debian-security trixie-security InRelease
+Hit:3 http://deb.debian.org/debian trixie-updates InRelease
+Reading package lists...
+Listing...
+=== Kernel and key package versions ===
+6.12.111+deb13-amd64
+bind9	1:9.20.29-1~deb13u1
+fail2ban	1.1.0-8
+linux-image-amd64	6.12.111-1
+nginx	1.26.3-3+deb13u9
+openssh-server	1:10.0p1-7+deb13u4
+openssl	3.5.7-1~deb13u3
+python3	3.13.5-1
+=== SSH effective settings ===
+logingracetime 120
+maxauthtries 6
+permitrootlogin no
+pubkeyauthentication yes
+passwordauthentication yes
+kbdinteractiveauthentication no
+x11forwarding yes
+compression yes
+allowtcpforwarding yes
+permittunnel no
+=== TLS private key, SSH directory and backup permissions ===
+600 root root /etc/nginx/tls/lab.key
+700 root root /var/backups/lab
+750 root root /usr/local/sbin/lab-backup
+700 labuser labuser /home/labuser/.ssh
+600 labuser labuser /home/labuser/.ssh/authorized_keys
+=== Nginx log permissions ===
+755 root adm /var/log/nginx
+644 root root /var/log/nginx/lab.access.log
+644 root root /var/log/nginx/lab.error.log
+/var/log/nginx/*.log {
+	daily
+	missingok
+	rotate 14
+	compress
+	delaycompress
+	notifempty
+	create 0640 www-data adm
+	sharedscripts
+	prerotate
+		if [ -d /etc/logrotate.d/httpd-prerotate ]; then \
+			run-parts /etc/logrotate.d/httpd-prerotate; \
+		fi \
+	endscript
+	postrotate
+		invoke-rc.d nginx rotate >/dev/null 2>&1
+	endscript
+}
+=== Listening services ===
+Netid State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess
+udp   UNCONN 0      0          127.0.0.1:53         0.0.0.0:*    users:(("named",pid=6243,fd=19))
+udp   UNCONN 0      0          127.0.0.1:53         0.0.0.0:*    users:(("named",pid=6243,fd=18))
+udp   UNCONN 0      0            0.0.0.0:5353       0.0.0.0:*    users:(("avahi-daemon",pid=803,fd=12))
+udp   UNCONN 0      0            0.0.0.0:51506      0.0.0.0:*    users:(("avahi-daemon",pid=803,fd=14))
+udp   UNCONN 0      0              [::1]:53            [::]:*    users:(("named",pid=6243,fd=24))
+udp   UNCONN 0      0              [::1]:53            [::]:*    users:(("named",pid=6243,fd=25))
+udp   UNCONN 0      0               [::]:50395         [::]:*    users:(("avahi-daemon",pid=803,fd=15))
+udp   UNCONN 0      0               [::]:5353          [::]:*    users:(("avahi-daemon",pid=803,fd=13))
+tcp   LISTEN 0      4096       127.0.0.1:631        0.0.0.0:*    users:(("cupsd",pid=981,fd=7))
+tcp   LISTEN 0      5          127.0.0.1:953        0.0.0.0:*    users:(("named",pid=6243,fd=29))
+tcp   LISTEN 0      5          127.0.0.1:8000       0.0.0.0:*    users:(("python3",pid=6229,fd=3))
+tcp   LISTEN 0      10         127.0.0.1:53         0.0.0.0:*    users:(("named",pid=6243,fd=22))
+tcp   LISTEN 0      10         127.0.0.1:53         0.0.0.0:*    users:(("named",pid=6243,fd=20))
+tcp   LISTEN 0      511          0.0.0.0:80         0.0.0.0:*    users:(("nginx",pid=6246,fd=7),("nginx",pid=6245,fd=7),("nginx",pid=6244,fd=7))
+tcp   LISTEN 0      128          0.0.0.0:22         0.0.0.0:*    users:(("sshd",pid=998,fd=6))
+tcp   LISTEN 0      511          0.0.0.0:443        0.0.0.0:*    users:(("nginx",pid=6246,fd=9),("nginx",pid=6245,fd=9),("nginx",pid=6244,fd=9))
+tcp   LISTEN 0      10             [::1]:53            [::]:*    users:(("named",pid=6243,fd=26))
+tcp   LISTEN 0      10             [::1]:53            [::]:*    users:(("named",pid=6243,fd=27))
+tcp   LISTEN 0      4096           [::1]:631           [::]:*    users:(("cupsd",pid=981,fd=6))
+tcp   LISTEN 0      511             [::]:80            [::]:*    users:(("nginx",pid=6246,fd=8),("nginx",pid=6245,fd=8),("nginx",pid=6244,fd=8))
+tcp   LISTEN 0      128             [::]:22            [::]:*    users:(("sshd",pid=998,fd=7))
+tcp   LISTEN 0      511             [::]:443           [::]:*    users:(("nginx",pid=6246,fd=10),("nginx",pid=6245,fd=10),("nginx",pid=6244,fd=10))
+tcp   LISTEN 0      5              [::1]:953           [::]:*    users:(("named",pid=6243,fd=30))
+=== Firewall ===
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere
+80/tcp                     ALLOW IN    Anywhere
+443/tcp                    ALLOW IN    Anywhere
+22/tcp (v6)                ALLOW IN    Anywhere (v6)
+80/tcp (v6)                ALLOW IN    Anywhere (v6)
+443/tcp (v6)               ALLOW IN    Anywhere (v6)
+
+=== BIND local-only settings ===
+options {
+    directory "/var/cache/bind";
+    listen-on { 127.0.0.1; };
+    listen-on-v6 { ::1; };
+    recursion no;
+    allow-query { localhost; };
+    allow-transfer { none; };
+    dnssec-validation auto;
+};
+=== Application sandbox ===
+User=labapp
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+NoNewPrivileges=yes
+=== Unexpected failed services ===
+  UNIT LOAD ACTIVE SUB DESCRIPTION
+
+0 loaded units listed.
+=== Regular backup schedule ===
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+15 2 * * * root /usr/local/sbin/lab-backup >> /var/log/lab-backup.log 2>&1
+=== Actual SSH client address (sanitized in saved report) ===
+not available
+=== Pending restart ===
+No reboot-required marker

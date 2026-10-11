@@ -1,0 +1,28 @@
+Windows-to-VM verification: 2026-10-11T15:16:05.259499+00:00
+
+TCP 22: reachable
+TCP 80: reachable
+TCP 443: reachable
+TCP 53: blocked or not externally listening
+TCP 8000: blocked or not externally listening
+TLS: TLSv1.3, certificate chain and hostname verified against lab certificate
+HTTP/1.1 200 OK
+
+Server: nginx
+
+Date: Sun, 11 Oct 2026 15:14:32 GMT
+
+Content-Type: application/json
+
+Content-Length: 68
+
+Connection: close
+
+X-Content-Type-Options: nosniff
+
+X-Frame-Options: DENY
+
+
+
+{"status": "ok", "service": "lab-app", "via": "nginx reverse proxy"}
+HTTP redirect: 301 to https://web.lab.test/

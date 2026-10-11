@@ -1,0 +1,16 @@
+=== Fix permissions on custom Nginx logs ===
+=== Disable unneeded SSH compression and forwarding ===
+640 root adm /var/log/nginx/lab.access.log
+640 root adm /var/log/nginx/lab.error.log
+logingracetime 30
+maxauthtries 3
+permitrootlogin no
+pubkeyauthentication yes
+passwordauthentication yes
+x11forwarding no
+compression no
+disableforwarding yes
+permittunnel no
+Password SSH retained until owner chooses authentication mode.
+=== Backup after hardening ===
+/var/backups/lab/lab-20261011T154916Z.tar.gz
